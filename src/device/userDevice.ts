@@ -2,6 +2,12 @@ import { ResponseName, ControllerErrorResponseType } from '../namespace';
 
 import * as Device from './index';
 import { ControllerRequestEvent } from './type';
+import {
+  Endpoint,
+  Capability,
+  DeviceCategory,
+  DiscoveryRequestEvent,
+} from 'discovery';
 
 /**
  * DeviceSearchFunction is a logic of finding a target device from Alexa's controller Request.
@@ -18,13 +24,27 @@ export type DeviceSearchFunction = (
 export interface IUserDevice {
   getEndpointId(): string;
   sendSignal(): Promise<Device.Response>;
+  getDeviceDescriptor(): DeviceDescriptor;
+  getCapability(): Capability[];
+  getCategory(): DeviceCategory[];
+  buildEndpoint(): Endpoint;
+  getDeviceBehavior(): Device.DeviceBehaviorDefinition;
+}
+
+export interface DeviceDescriptor {
+  endpointId: string;
+  name: string;
+  description: string;
+  manufactureName: string;
+  friendlyName: string;
+  cookie?: {};
 }
 
 /**
  * Parameter of constructor UserDevice class
  */
 export interface UserDeviceParam {
-  event: ControllerRequestEvent;
+  event: ControllerRequestEvent | DiscoveryRequestEvent;
   isAsyncResponse?: boolean;
 }
 
@@ -48,19 +68,35 @@ export abstract class UserDevice implements IUserDevice {
   /**
    * endpoint Id
    */
-  public getEndpointId(): string {
-    return this.config.event.directive.endpoint.endpointId;
-  }
+  public abstract getEndpointId(): string;
 
   /**
-   * for more declarative approach, You can use this method.
-   * @param behaviorDefinition mapping between alexa directive and device cloud action
+   * endpoint Id
    */
-  protected async doDeviceAction(
-    behaviorDefinition: Device.DeviceBehaviorDefinition
-  ): Promise<Device.Response> {
+  public abstract getDeviceDescriptor(): DeviceDescriptor;
+
+  /**
+   * endpoint
+   */
+  public abstract getCapability(): Capability[];
+
+  /**
+   * Device Category
+   */
+  public abstract getCategory(): DeviceCategory[];
+
+  /**
+   * Device Behavior
+   */
+  public abstract getDeviceBehavior(): Device.DeviceBehaviorDefinition;
+
+  /**
+   * Sending Signal
+   */
+  public async sendSignal(): Promise<Device.Response> {
+    const behavior = this.getDeviceBehavior();
     const { namespace, name } = this.config.event.directive.header;
-    if (Object.keys(behaviorDefinition).length <= 0) throw Error('error');
+    if (Object.keys(behavior).length <= 0) throw Error('error');
 
     // @ts-ignore
     const response = await behaviorDefinition[namespace][name](
@@ -69,18 +105,35 @@ export abstract class UserDevice implements IUserDevice {
     return response;
   }
 
-  public abstract async sendSignal(): Promise<Device.Response>;
+  /**
+   * return endpoint
+   */
+  public buildEndpoint(): Endpoint {
+    const desc = this.getDeviceDescriptor();
+    const categories = this.getCategory();
+    const capabilities = this.getCapability();
+    return {
+      endpointId: desc.endpointId,
+      manufacturerName: desc.manufactureName,
+      description: desc.manufactureName,
+      friendlyName: desc.friendlyName,
+      displayCategories: categories,
+      capabilities: capabilities,
+      cookie: desc.cookie,
+    };
+  }
 
   /**
    * Get response header
    */
   protected getResponseHeader(name: ResponseName = 'Response'): Device.Header {
+    const directive = this.config.event.directive as Device.Directive;
     return {
       namespace: 'Alexa',
       name: name,
-      messageId: this.config.event.directive.header.messageId + '-R',
+      messageId: directive.header.messageId + '-R',
       payloadVersion: '3',
-      correlationToken: this.config.event.directive.header.correlationToken,
+      correlationToken: directive.header.correlationToken,
     };
   }
 
@@ -88,10 +141,11 @@ export abstract class UserDevice implements IUserDevice {
    * switch endpoint for esponse between sync and async
    */
   protected getResponseEndpoint() {
+    const directive = this.config.event.directive as Device.Directive;
     return this.config.isAsyncResponse
-      ? this.config.event.directive.endpoint
+      ? directive.endpoint
       : {
-          endpointId: this.config.event.directive.endpoint.endpointId,
+          endpointId: directive.endpoint.endpointId,
         };
   }
 
