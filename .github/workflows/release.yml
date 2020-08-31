@@ -1,0 +1,30 @@
+name: Simple CI
+
+on:
+  push:
+    branches: 
+      - master
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: node
+      uses: actions/setup-node@v1
+    - name: yarn install, build, and test
+      run: |
+        yarn install
+        # yarn test
+    - name: deploy
+      env:
+        NPM_USER: ${{ secrets.npm_user }}
+        NPM_PASS: ${{ secrets.npm_password }}
+        NPM_EMAIL: ${{ secrets.npm_email }}
+      run: |
+        npm install -g npm-cli-login
+        npm-cli-login
+        yarn build 
+        npm publish
