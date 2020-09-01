@@ -93,13 +93,14 @@ export abstract class UserDevice implements IUserDevice {
   /**
    * Sending Signal
    */
+  // public abstract sendSignal(): Promise<Device.Response>;
   public async sendSignal(): Promise<Device.Response> {
     const behavior = this.getDeviceBehavior();
     const { namespace, name } = this.config.event.directive.header;
     if (Object.keys(behavior).length <= 0) throw Error('error');
 
     // @ts-ignore
-    const response = await behaviorDefinition[namespace][name](
+    const response = await behavior[namespace][name](
       this.config.event.directive
     );
     return response;

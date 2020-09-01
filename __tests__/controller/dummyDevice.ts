@@ -31,19 +31,6 @@ export class DummyDevice extends Device.UserDevice {
         ]
     }
 
-    public async sendSignal() {
-        return {
-            event: {
-                header: this.getResponseHeader(),
-                endpoint: this.getResponseEndpoint(),
-                payload: {} 
-            },
-            context: {
-                properties: []
-            }
-        }
-    }
-
     public getDeviceBehavior() {
         const r: Device.Response = {
             event: {
@@ -69,13 +56,17 @@ export class DummyDevice extends Device.UserDevice {
     
                     const brightnessDelta = payload.brightnessDelta
                     // @ts-ignore
-                    r.context.properties.push({
-                        namespace: 'Alexa.BrightnessController',
-                        name: 'brightness',
-                        value: brightnessDelta,
-                        timeOfSample: 'time',
-                        uncertaintyInMilliseconds: 1000
-                    })
+                    r.context = {
+                        properties: [
+                            {
+                                namespace: 'Alexa.BrightnessController',
+                                name: 'brightness',
+                                value: brightnessDelta,
+                                timeOfSample: 'time',
+                                uncertaintyInMilliseconds: 1000
+                            }
+                        ]
+                    }
                     return r
                 }
             },

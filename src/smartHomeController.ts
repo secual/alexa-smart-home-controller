@@ -84,17 +84,22 @@ class SmartHomeController {
       // get device for requesting the device cloud
 
       if (this.devicePool) {
+        console.log('[ASSHC]: Search from devicePool');
         device = this.devicePool.find(
-          d => d.getEndpointId() === this.event.directive.endpoint.endpointId
+          (d): boolean =>
+            d.getEndpointId() === this.event.directive.endpoint.endpointId
         );
       } else if (this.deviceSearchFunction) {
+        console.log('[ASSHC]: Search by function');
         device = await this.deviceSearchFunction(this.event);
         if (!device) throw new Error('error');
       }
 
-      console.log('[ASSHC]:Controller:Target Device', device);
+      console.log(
+        '[ASSHC]:Controller:Target Device',
+        typeof device?.sendSignal
+      );
       if (device) {
-        // send signal
         const response = await device.sendSignal();
         console.log('[ASSHC]:Controller:Response', response);
         return response;

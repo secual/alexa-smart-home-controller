@@ -27,7 +27,7 @@ let discoveryInput: DiscoveryRequestEvent = {
     }
 }
 
-let controllerInput: ControllerRequestEvent = {
+let controllerSetBrightness: ControllerRequestEvent = {
     directive: {
         header: {
           namespace: 'Alexa.BrightnessController',
@@ -50,6 +50,29 @@ let controllerInput: ControllerRequestEvent = {
     }
 }
 
+let controllerAdjustBrightness: ControllerRequestEvent = {
+    directive: {
+        header: {
+          namespace: 'Alexa.BrightnessController',
+          name: 'AdjustBrightness',
+          payloadVersion: '3',
+          messageId: 'id1',
+          correlationToken: 'cotoken'
+        },
+        endpoint: {
+            scope: {
+                type: 'BearerToken',
+                token: 'token'
+            },
+            endpointId: '1',
+            cookie: {}
+        },
+        payload: {
+          brightnessDelta: 10
+        }
+    }
+}
+
 /**
  * Test Case Definition
  *
@@ -62,7 +85,7 @@ const testCase = [
         // [0]: description
         {
             name: 'discoverySucceeded',
-            description: 'description of test'
+            description: 'Alexa Discovery successfully'
         },
         // [1]: input of the test
         discoveryInput,
@@ -75,15 +98,29 @@ const testCase = [
     [
         // [0]: description
         {
-            name: 'controllerSucceeded',
-            description: 'description of test'
+            name: 'controllerNoOperation',
+            description: 'BrightnessController SetBrightness No operation',
         },
         // [1]: input of the test
-        controllerInput,
+        controllerSetBrightness,
         // [2]: expected
         (result: {}, spies: MockReturn) => {
             console.log(spies)
-            expect(result).toEqual(expected['controllerSucceeded'])
+            expect(result).toEqual(expected['controllerNoOperation'])
+        }
+    ],
+    [
+        // [0]: description
+        {
+            name: 'controllerAdjustBrightness',
+            description: 'BrightnessController AdjustBrightness request successfully',
+        },
+        // [1]: input of the test
+        controllerAdjustBrightness,
+        // [2]: expected
+        (result: {}, spies: MockReturn) => {
+            console.log(spies)
+            expect(result).toEqual(expected['controllerAdjustBrightness'])
         }
     ]
 ]

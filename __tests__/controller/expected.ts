@@ -117,10 +117,7 @@ export = {
             }
         }
     },
-    'controllerSucceeded': {
-        "context": {
-        "properties": []
-        },
+    'controllerNoOperation': {
         "event": {
         "endpoint": {
             "endpointId": "1"
@@ -128,11 +125,42 @@ export = {
         "header": {
             "correlationToken": "cotoken",
             "messageId": "id1-R",
-            "name": "Response",
+            "name": "ErrorResponse",
             "namespace": "Alexa",
             "payloadVersion": "3"
         },
-        "payload": {}
+        "payload": {
+            "message": "This operation is not supported.",
+            "type": "NOT_IN_OPERATION"
         }
-    }
+        }
+    },
+    'controllerAdjustBrightness': {
+        "event":{
+           "header":{
+              "namespace":"Alexa",
+              "name":"Response",
+              "messageId":"id1-R",
+              "payloadVersion":"3",
+              "correlationToken":"cotoken"
+           },
+           "endpoint":{
+              "endpointId":"1"
+           },
+           "payload":{
+              
+           }
+        },
+        "context":{
+           "properties":[
+              {
+                 "namespace":"Alexa.BrightnessController",
+                 "name":"brightness",
+                 "value":10,
+                 "timeOfSample":"time",
+                 "uncertaintyInMilliseconds":1000
+              }
+           ]
+        }
+     }
 }

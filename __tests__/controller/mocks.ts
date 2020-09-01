@@ -1,19 +1,23 @@
     
 import { Mocks } from 'jest-simple-template'
-import { DummyDevice } from './dummyDevice'
 
+class Dummy {
+    public method() {
+        return 'dummy'
+    }
+}
 const mocks: Mocks = {
     'discoverySucceeded': () => {
         // ToDo: write mock code if needed
-        const spyDummyDevice = jest.spyOn(DummyDevice.prototype, 'getEndpointId')
+        const spyDummyDevice = jest.spyOn(Dummy.prototype, 'method')
             .mockReturnValue('1')
         return {
             spyDummyDevice
         }
     },
-    'controllerSucceeded': () => {
+    'controllerNoOperation': () => {
         // ToDo: write mock code if needed
-        const spyDummyDevice = jest.spyOn(DummyDevice.prototype, 'getEndpointId')
+        const spyDummyDevice = jest.spyOn(Dummy.prototype, 'method')
             .mockReturnValue('1')
         return {
             spyDummyDevice
