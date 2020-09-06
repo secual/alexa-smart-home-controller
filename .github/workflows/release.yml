@@ -6,7 +6,7 @@ on:
       - master
 
 jobs:
-  build:
+  buildAndDeploy:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
@@ -16,10 +16,6 @@ jobs:
       run: |
         yarn install
         yarn test
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
     - name: deploy
       env:
         NPM_USER: ${{ secrets.npm_user }}
@@ -30,3 +26,4 @@ jobs:
         npm-cli-login
         yarn build 
         npm publish
+
