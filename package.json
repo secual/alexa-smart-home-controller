@@ -43,5 +43,21 @@
   },
   "dependencies": {
     "moment": "^2.27.0"
-  }
+  },
+  "description": "Alexa Smart Home Controller makes your implementation simpler.",
+  "directories": {
+    "example": "example"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/secual/alexa-smart-home-controller.git"
+  },
+  "keywords": [
+    "Alexa",
+    "SmartHomeSkill"
+  ],
+  "bugs": {
+    "url": "https://github.com/secual/alexa-smart-home-controller/issues"
+  },
+  "homepage": "https://github.com/secual/alexa-smart-home-controller#readme"
 }
