@@ -22,12 +22,20 @@ export type DeviceSearchFunction = (
  * sendSignal method is called automatically
  */
 export interface IUserDevice {
+  /**
+   * @returns return value must be matched in endpointId property in the Controller directive
+   */
   getEndpointId(): string;
+
+  /**
+   * This method is automatically called by SmartHomeController
+   * You don't need
+   */
   sendSignal(): Promise<Device.Response>;
-  getDeviceDescriptor(): DeviceDescriptor;
-  getCapability(): Capability[];
-  getCategory(): DeviceCategory[];
-  buildEndpoint(): Endpoint;
+  getDeviceDescriptor?(): DeviceDescriptor;
+  getCapability?(): Capability[];
+  getCategory?(): DeviceCategory[];
+  buildEndpoint?(): Endpoint;
   getDeviceBehavior(): Device.DeviceBehaviorDefinition;
 }
 
@@ -72,18 +80,20 @@ export abstract class UserDevice implements IUserDevice {
 
   /**
    * endpoint Id
+   * Important: DeviceDescriptor.endpointId is set to the
+   * directive.endpoint.endpointId in the SmartHomeSkill.
    */
-  public abstract getDeviceDescriptor(): DeviceDescriptor;
+  public abstract getDeviceDescriptor?(): DeviceDescriptor;
 
   /**
    * endpoint
    */
-  public abstract getCapability(): Capability[];
+  public abstract getCapability?(): Capability[];
 
   /**
    * Device Category
    */
-  public abstract getCategory(): DeviceCategory[];
+  public abstract getCategory?(): DeviceCategory[];
 
   /**
    * Device Behavior
@@ -110,8 +120,18 @@ export abstract class UserDevice implements IUserDevice {
    * return endpoint
    */
   public buildEndpoint(): Endpoint {
+    if (!this.getDeviceDescriptor || !this.getCategory || !this.getCapability) {
+      console.log(
+        '[ASHC]: Required methods getDeviceDescriptor, getCategory, getCapability were not implemented'
+      );
+      throw Error('Implementation error');
+    }
+
+    // @ts-ignore already validated above
     const desc = this.getDeviceDescriptor();
+    // @ts-ignore already validated above
     const categories = this.getCategory();
+    // @ts-ignore already validated above
     const capabilities = this.getCapability();
     return {
       endpointId: desc.endpointId,

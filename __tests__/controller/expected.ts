@@ -162,5 +162,47 @@ export = {
               }
            ]
         }
-     }
+     },
+     'discoverySucceededWithSearchFunction': {
+        "event": {
+            "header":{
+                "namespace":"Alexa.Discovery",
+                "name":"Discover.Response",
+                "payloadVersion":"3",
+                "messageId":"id1"
+            },
+            "payload": {
+                "endpoints":[
+                    {
+                        "endpointId":"1",
+                        "manufacturerName":"manufacture1",
+                        "description":"desc1",
+                        "friendlyName":"device1",
+                        "displayCategories":[
+                            "LIGHT"
+                        ],
+                        "capabilities":[
+                            {
+                            "type":"AlexaInterface",
+                            "version":"3",
+                            "interface":"Alexa.BrightnessController",
+                            "properties":{
+                                "supported":[
+                                    {
+                                        "name":"brightness"
+                                    }
+                                ],
+                                "proactivelyReported":false,
+                                "retrievable":false
+                            }
+                            }
+                        ],
+                        "cookie":{
+                            
+                        }
+                    }
+                ]
+            }
+        }
+    }
 }

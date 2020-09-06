@@ -23,6 +23,14 @@ const mocks: Mocks = {
             spyDummyDevice
         }
     },
+    'discoverySucceededWithSearchFunction': () => {
+        // ToDo: write mock code if needed
+        const spyDummyDevice = jest.spyOn(Dummy.prototype, 'method')
+            .mockReturnValue('1')
+        return {
+            spyDummyDevice
+        }
+    }
 }
 
 export default mocks

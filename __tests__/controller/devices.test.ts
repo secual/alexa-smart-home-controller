@@ -8,10 +8,12 @@ import expected from './expected'
 import { ControllerRequestEvent } from '../../src/device'
 import { DiscoveryRequestEvent } from '../../src/discovery'
 
-// let input = {}
 
-let discoveryInput: DiscoveryRequestEvent = {
-    directive: {
+/**
+ * Test with definition each device
+ */
+const discoveryInput: DiscoveryRequestEvent = {
+    directive: { 
         header: {
             namespace: 'Alexa.Discovery',
             name: 'Discover',
@@ -27,7 +29,7 @@ let discoveryInput: DiscoveryRequestEvent = {
     }
 }
 
-let controllerSetBrightness: ControllerRequestEvent = {
+const controllerSetBrightness: ControllerRequestEvent = {
     directive: {
         header: {
           namespace: 'Alexa.BrightnessController',
@@ -50,7 +52,7 @@ let controllerSetBrightness: ControllerRequestEvent = {
     }
 }
 
-let controllerAdjustBrightness: ControllerRequestEvent = {
+const controllerAdjustBrightness: ControllerRequestEvent = {
     directive: {
         header: {
           namespace: 'Alexa.BrightnessController',
@@ -126,9 +128,9 @@ const testCase = [
 ]
 
 // @ts-ignore
-describe.each(testCase)('SmartHomeController', (d, r, e) => {
+describe.each(testCase)('SmartHomeController: Adding Devices on Constructor', (d, r, e) => {
     beforeEach(() => {
-        jest.resetAllMocks()
+        jest.restoreAllMocks()
     })
     const testMeta = d as TestCaseMetaData
     it(`${testMeta.name}:${testMeta.description}`, async () => {

@@ -4,7 +4,7 @@ import { DeviceCategory } from '../../src/discovery'
 
 export class DummyDevice extends Device.UserDevice {
     public getEndpointId() {
-        return '1'
+        return '1' // should be matched getDeviceDescriptor.endpointId
     }
 
     public getCategory(): DeviceCategory[] {
@@ -12,6 +12,9 @@ export class DummyDevice extends Device.UserDevice {
     }
 
     public getDeviceDescriptor() {
+        /**
+         * Call to your device cloud to get device meta data
+         */
         const dd: Device.DeviceDescriptor = {
             endpointId: '1',
             name: 'mylightdevice',
@@ -30,6 +33,78 @@ export class DummyDevice extends Device.UserDevice {
             Discovery.FanOnLightToggleControllerPreset
         ]
     }
+
+    public getDeviceBehavior() {
+        const r: Device.Response = {
+            event: {
+                header: this.getResponseHeader(),
+                endpoint: this.getResponseEndpoint(),
+                payload: {} 
+            }
+        }
+        return {
+            'Alexa.BrightnessController': {
+                // @ts-ignore
+                SetBrightness: async (directive) => {
+                    return this.getErrorResponse({
+                        type: 'NOT_IN_OPERATION',
+                        message: 'This operation is not supported.'
+                    })
+                },
+                // @ts-ignore
+                AdjustBrightness: async (directive) => {
+                    const {
+                        payload,
+                    } = directive
+    
+                    const brightnessDelta = payload.brightnessDelta
+                    // @ts-ignore
+                    r.context = {
+                        properties: [
+                            {
+                                namespace: 'Alexa.BrightnessController',
+                                name: 'brightness',
+                                value: brightnessDelta,
+                                timeOfSample: 'time',
+                                uncertaintyInMilliseconds: 1000
+                            }
+                        ]
+                    }
+                    return r
+                }
+            },
+            'Alexa.PowerController': {
+                // @ts-ignore
+                TurnOn: async (directive) => {
+                    return r
+                },
+                // @ts-ignore
+                TurnOff: async (directive) => {
+                    return r
+                }
+            },
+            'Alexa.ToggleController': {
+                // @ts-ignore
+                TurnOn: async (directive) => {
+                    return r
+                },
+                // @ts-ignore
+                TurnOff: async (directive) => {
+                    return r
+                }            
+            }
+        }
+    }
+}
+
+export class DummyDevice2 extends Device.UserDevice {
+    public getEndpointId() {
+        return '1' // should be matched getDeviceDescriptor.endpointId
+    }
+
+    public getCategory = undefined
+    public getDeviceDescriptor = undefined
+    public getCapability = undefined
 
     public getDeviceBehavior() {
         const r: Device.Response = {

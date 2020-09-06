@@ -1,6 +1,5 @@
 import { ControllerNameSpace } from '../namespace';
 import * as Discovery from './type';
-import { DiscoveryRequestEvent } from './type';
 
 /**
  * Parameter for createCapability method
@@ -466,10 +465,3 @@ export const FanRangeControllerPreset = createCapability({
     ],
   },
 });
-
-/**
- * Getting Devices from Device Cloud
- */
-export type DiscoveryFunction = (
-  event: DiscoveryRequestEvent
-) => Promise<Discovery.Endpoint[]>;

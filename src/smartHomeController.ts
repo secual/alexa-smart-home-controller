@@ -4,9 +4,8 @@ import { IUserDevice } from './device';
 
 interface SmartHomeControllerConstructorParam {
   event: any;
-  discoverFunction?: Discovery.DiscoveryFunction;
-  deviceSearchFunction?: Device.DeviceSearchFunction;
   devices?: IUserDevice[];
+  discoveryFunction?: Discovery.DiscoveryFunction;
 }
 /**
  * Main Controller
@@ -14,7 +13,6 @@ interface SmartHomeControllerConstructorParam {
 class SmartHomeController {
   private event: any;
   private discoveryFunction?: Discovery.DiscoveryFunction;
-  private deviceSearchFunction?: Device.DeviceSearchFunction;
   private devicePool: IUserDevice[] = [];
 
   /**
@@ -22,9 +20,8 @@ class SmartHomeController {
    */
   constructor(param: SmartHomeControllerConstructorParam) {
     this.event = param.event;
-    this.discoveryFunction = param.discoverFunction ?? undefined;
-    this.deviceSearchFunction = param.deviceSearchFunction ?? undefined;
     this.devicePool = param.devices ?? [];
+    this.discoveryFunction = param.discoveryFunction ?? undefined;
   }
 
   /**
@@ -34,7 +31,7 @@ class SmartHomeController {
     let device: IUserDevice | undefined = undefined;
 
     try {
-      console.log('[ASSHC]:RequestFromAlexa:Directive', this.event.directive);
+      console.log('[ASHC]:RequestFromAlexa:Directive', this.event.directive);
       const header: Discovery.Header | Device.Header = this.event.directive
         .header;
 
@@ -46,35 +43,45 @@ class SmartHomeController {
         header.name === 'Discover'
       ) {
         console.log('Discover event', this.event);
-        header.name = 'Discover.Response';
+        const responseHeader: Discovery.Header = Object.assign({}, header);
+        responseHeader.name = 'Discover.Response';
 
-        if (this.devicePool.length > 0) {
+        if (this.discoveryFunction) {
+          // Search from DeviceCloud
+          const endpoints = await this.discoveryFunction(this.event);
+
+          console.log(
+            '[ASHC]:Discovery:Response',
+            JSON.stringify({ header, endpoints })
+          );
           return {
             event: {
-              header,
+              header: responseHeader,
               payload: {
-                endpoints: this.devicePool.map(d => d.buildEndpoint()),
+                endpoints,
               },
             },
           };
         }
 
-        if (this.discoveryFunction) {
-          // Search from DeviceCloud
-          const endpoints: Discovery.Endpoint[] = await this.discoveryFunction(
-            this.event
-          );
-          const payload = {
-            endpoints: endpoints,
-          };
-          console.log(
-            '[ASSHC]:Discovery:Response',
-            JSON.stringify({ header, payload })
+        if (this.devicePool.length > 0) {
+          const endpoints = this.devicePool.map(
+            (d): Discovery.Endpoint => {
+              if (d.buildEndpoint) {
+                return d.buildEndpoint();
+              }
+              console.log(
+                `[ASHC]: Required method the buildEndpoint does not exist`
+              );
+              throw Error('Requirement Error');
+            }
           );
           return {
             event: {
-              header,
-              payload,
+              header: responseHeader,
+              payload: {
+                endpoints,
+              },
             },
           };
         }
@@ -84,24 +91,17 @@ class SmartHomeController {
       // get device for requesting the device cloud
 
       if (this.devicePool) {
-        console.log('[ASSHC]: Search from devicePool');
+        console.log('[ASHC]: Search from devicePool');
         device = this.devicePool.find(
           (d): boolean =>
             d.getEndpointId() === this.event.directive.endpoint.endpointId
         );
-      } else if (this.deviceSearchFunction) {
-        console.log('[ASSHC]: Search by function');
-        device = await this.deviceSearchFunction(this.event);
-        if (!device) throw new Error('error');
       }
 
-      console.log(
-        '[ASSHC]:Controller:Target Device',
-        typeof device?.sendSignal
-      );
+      console.log('[ASHC]:Controller:Target Device', typeof device?.sendSignal);
       if (device) {
         const response = await device.sendSignal();
-        console.log('[ASSHC]:Controller:Response', response);
+        console.log('[ASHC]:Controller:Response', response);
         return response;
       }
       return this.getGeneralErrorResponse();

@@ -1,14 +1,14 @@
 # alexa-smart-home-controller (beta)
-This package make your smart home skill code simpler.
+Alexa Smart Home Controller makes your implementation simpler. 
 
-** Important: This package is now Work in progress.
+## Concept
 
-# Concept
-- Be Readable
-- Can be more focus to implement a logic of device cloud
-- Implement simplify
+- Readable and easier understandable structure
+- Developer can be more focus on their device cloud implementation
 
-# install
+This library is designed Developer can make code easier by riding some conventions on this package.
+
+## install
 
 ```
 npm install alexa-smart-home-controller
@@ -18,109 +18,341 @@ or
 yarn add alexa-smart-home-controller
 ```
 
-# example
+## example
 
-```javascript
+This is a example of Lambda handler which is called from Alexa.
+
+```typescript
 import SmartHomeController from 'alexa-smart-home-controller'
-
-// Yous have to implement a logic of your device cloud
 import * as DeviceCloud from './deviceCloud'
 
-// @ts-ignore
 export const handler = async (event, context) => {
-  console.log(event, context)
-  console.log(JSON.stringify(event))
+    console.log(event, context)
+    console.log(JSON.stringify(event))
 
-  const controller = new SmartHomeController(
-    event,
-    DeviceCloud.discoverFunc,
-    DeviceCloud.searchFunc
-  )
+    const devices = [
+      new DeviceCloud.MyLightDevice({
+        event
+      })
+    ]
 
-  const response = await controller.run()
-  return response
+    const controller = new SmartHomeController({
+      event,
+      devices
+    })
+  
+    const response = {
+      event: await controller.run()
+    }
+    context.succeed(response)
 };
 ```
 
-# How to implement your Smart Home Skill with alexa-smart-home-controller
-## Step1: implement device discovery function
-Smart home skill has to discover user devices from device cloud.
-You can implement discovery logic as DeviceSearchFunction object.
-This object needs for creating SmartHomeController instance.
+
+## Implementation Step
+
+### Step1: Design device's Capability and Behavior
+First You will implement your device capability and behavior as a device class which extends from UserDevice base class.
 
 ```javascript
- export type DeviceSearchFunction = (
-  event: Device.ControllerRequestEvent
-) => Promise<Device.IUserDevice>;
-```
+import { Device, Discovery } from 'alexa-smart-home-controller'
 
-## Step2: implement device object
-In this package, Requesting to the device cloud is used through the UserDevice object.
-For example, when your skill request to the light device, You will implement a device object
-for the light device.
-
-```typescript
-class LightDevice extends Device.UserDevice {
-  public async sendSignal(): Promise<Device.Response | {}> {
-    const header = this.event.directive.header
-
-    switch (header.name) {
-      case 'SetBrightness':
-          // Requesting for your light device to the device cloud here.
-          break;
-      case 'AdjustBrightness':
-          // Requesting for your light device to the device cloud here.
-        break;
-      default:
-        break;
+// this is a dummy of device cloud
+class YourDeviceCloud {
+    public call(val): string {
+        return val
     }
-    const r: Device.Response = {
-      event: {
-        header: {
-          namespace: 'Alexa',
-          name: 'Response',
-          messageId: this.event.directive.header.messageId + '-R',
-          payloadVersion: '3',
-          correlationToken: 'token1'
-        },
-        endpoint: this.event.directive.endpoint,
-        payload: 'hoge' 
-      },
-      context: {
-        properties: [
-          {
-            namespace: header.namespace,
-            name: header.name,
-            value: 'ON',
-            timeOfSample: 'test',
-            uncertaintyInMilliseconds: 50
-          }
+}
+
+export class MyLightDevice extends Device.UserDevice {
+    public getEndpointId() {
+        return '1'
+    }
+
+    public getCategory() {
+        return ['LIGHT']
+    }
+
+    public getDeviceDescriptor() {
+        const dd: Device.DeviceDescriptor = {
+            endpointId: '1', // should be matched value from getEndpointId()
+            name: 'mylightdevice',
+            description: 'description',
+            manufactureName: 'manu',
+            friendlyName: 'fname',
+            cookie: {hoge: 'hoge'}
+        }
+        return dd
+    }
+
+    public getCapability() {
+        return [
+            Discovery.BrightnessControllerPreset,
+            Discovery.PowerControllerPreset,
+            Discovery.FanOnLightToggleControllerPreset
         ]
-      }
     }
-    return r
-  }
+
+    public getDeviceBehavior() {
+        const r = {
+            event: {
+                header: this.getResponseHeader(),
+                endpoint: this.getResponseEndpoint(),
+                payload: {} 
+            },
+            context: {
+                properties: []
+            }
+        }
+        return {
+            'Alexa.BrightnessController': {
+                SetBrightness: async (directive) => {
+                    return this.getErrorResponse({
+                        type: 'NOT_IN_OPERATION',
+                        message: 'This operation is not supported.'
+                    })
+                },
+                AdjustBrightness: async (directive) => {
+                    const {
+                        payload,
+                    } = directive
+    
+                    const brightnessDelta = payload.brightnessDelta
+                    const after = await new YourDeviceCloud().call(brightnessDelta)
+                    r.context.properties.push({
+                        namespace: 'Alexa.BrightnessController',
+                        name: 'brightness',
+                        value: after,
+                        timeOfSample: '',
+                        uncertaintyInMilliseconds: 1000
+                    })
+                    return r
+                }
+            },
+            'Alexa.PowerController': {
+                TurnOn: async (directive) => {
+                    const {
+                        payload,
+                    } = directive
+    
+                    await new YourDeviceCloud().call('turnOn')
+                    return r
+                },
+                TurnOff: async (directive) => {
+                    const {
+                        payload,
+                    } = directive
+    
+                    await new YourDeviceCloud().call('turnOff')
+                    return r
+                }
+            },
+            'Alexa.ToggleController': {
+                TurnOn: async (directive) => {
+                    const {
+                        payload,
+                    } = directive
+    
+                    await new YourDeviceCloud().call('fanOn')
+                    return r
+                },
+                TurnOff: async (directive) => {
+                    const {
+                        payload,
+                    } = directive
+    
+                    await new YourDeviceCloud().call('fanOff')
+                    return r
+                }            
+            }
+        }
+    }
 }
 ```
-## Step3: implement search device function
-This package is made for skill can respond utterances for several types of devices.
-So You have to find target device from user utterance.
-DeviceSearchFunction object is to do so.
 
-Easiest way is check device category. (below)
+the alexa-smart-home-controller requires implementation of some methods which defines on  the UserDevice base class.
+
+```javascript
+  /**
+   * endpoint Id
+   */
+  public abstract getEndpointId(): string;
+
+  /**
+   * endpoint Id
+   * Important: DeviceDescriptor.endpointId is set to the 
+   * directive.endpoint.endpointId in the SmartHomeSkill.
+   */
+  public abstract getDeviceDescriptor?(): DeviceDescriptor;
+
+  /**
+   * endpoint
+   */
+  public abstract getCapability?(): Capability[];
+
+  /**
+   * Device Category
+   */
+  public abstract getCategory?(): DeviceCategory[];
+
+  /**
+   * Device Behavior
+   */
+  public abstract getDeviceBehavior(): Device.DeviceBehaviorDefinition
+}
+```
+
+### Step2: Implement lambda handler by using SmartHomeController
+After defined device, You will implement your lambda handler with using SmartHomeController instance.
+Pass your device instance to the Constructor of the SmartHomeController.
+
+This is a code example same as the example section.
 
 ```typescript
-export const searchFunc: Device.DeviceSearchFunction = async (event) => {
-  // @ts-ignore
-  return DeviceMap[event.directive.header.namespace](event)
-}
+import SmartHomeController from 'alexa-smart-home-controller'
+import * as DeviceCloud from './deviceCloud'
 
-export const DeviceMap = {
-  'Alexa.BrightnessController': (event: Device.ControllerRequestEvent) => {
-    return new LightDevice(event)
-  },
-  'Alexa.ChannelController': (event: Device.ControllerRequestEvent) => {
-    return new TvDevice(event)
-  }
+export const handler = async (event, context) => {
+    console.log(event, context)
+    console.log(JSON.stringify(event))
+
+    const devices = [
+      new DeviceCloud.MyLightDevice({
+        event
+      })
+    ]
+
+    const controller = new SmartHomeController({
+      event,
+      devices
+    })
+  
+    const response = {
+      event: await controller.run()
+    }
+    context.succeed(response)
+};
+```
+
+## Discovery option
+By device cloud,  there is a case which all device information will get by a call like a list function.
+You can also implement discovery behavior individually as DiscoveryFunction
+
+DiscoveryFunction is a function which return all discovery endpoints
+
+```javascript
+/**
+ * Getting Devices from Device Cloud
+*/
+export type DiscoveryFunction = (
+  event: DiscoveryRequestEvent
+) => Promise<Endpoint[]>;
+```
+
+You can pass as this function as a parameter of constructor of SmartHomeController.
+
+```javascript
+import SmartHomeController from 'alexa-smart-home-controller'
+import * as DeviceCloud from './deviceCloud'
+
+export const handler = async (event, context) => {
+    console.log(event, context)
+    console.log(JSON.stringify(event))
+
+    const devices = [
+      new DeviceCloud.MyLightDevice({
+        event
+      })
+    ]
+
+    const controller = new SmartHomeController({
+      event,
+      devices,
+      DeviceCloud.YourDiscoveryFunction
+    })
+  
+    const response = {
+      event: await controller.run()
+    }
+    context.succeed(response)
+};
+```
+
+When you pass your discoveryFunction,  Some methods in the UserDevice class does not have to implement.
+
+
+```javascript
+
+export class DummyDevice2 extends Device.UserDevice {
+    public getEndpointId() {
+        return '1' // should be matched getDeviceDescriptor.endpointId
+    }
+
+    // You don't need implement these methods when you use discovery function. (Make sure set undefined these methods)
+    public getCategory = undefined
+    public getDeviceDescriptor = undefined
+    public getCapability = undefined
+
+    public getDeviceBehavior() {
+        const r: Device.Response = {
+            event: {
+                header: this.getResponseHeader(),
+                endpoint: this.getResponseEndpoint(),
+                payload: {} 
+            }
+        }
+        return {
+            'Alexa.BrightnessController': {
+                // @ts-ignore
+                SetBrightness: async (directive) => {
+                    return this.getErrorResponse({
+                        type: 'NOT_IN_OPERATION',
+                        message: 'This operation is not supported.'
+                    })
+                },
+                // @ts-ignore
+                AdjustBrightness: async (directive) => {
+                    const {
+                        payload,
+                    } = directive
+    
+                    const brightnessDelta = payload.brightnessDelta
+                    // @ts-ignore
+                    r.context = {
+                        properties: [
+                            {
+                                namespace: 'Alexa.BrightnessController',
+                                name: 'brightness',
+                                value: brightnessDelta,
+                                timeOfSample: 'time',
+                                uncertaintyInMilliseconds: 1000
+                            }
+                        ]
+                    }
+                    return r
+                }
+            },
+            'Alexa.PowerController': {
+                // @ts-ignore
+                TurnOn: async (directive) => {
+                    return r
+                },
+                // @ts-ignore
+                TurnOff: async (directive) => {
+                    return r
+                }
+            },
+            'Alexa.ToggleController': {
+                // @ts-ignore
+                TurnOn: async (directive) => {
+                    return r
+                },
+                // @ts-ignore
+                TurnOff: async (directive) => {
+                    return r
+                }            
+            }
+        }
+    }
 }
 ```

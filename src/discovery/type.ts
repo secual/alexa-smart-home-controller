@@ -394,3 +394,10 @@ export type AssetId =
   | 'Alexa.Value.Minimum'
   | 'Alexa.Value.Open'
   | 'Alexa.Value.QuickWash';
+
+/**
+ * Getting Devices from Device Cloud
+ */
+export type DiscoveryFunction = (
+  event: DiscoveryRequestEvent
+) => Promise<Endpoint[]>;

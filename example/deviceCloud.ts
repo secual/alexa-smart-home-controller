@@ -17,7 +17,7 @@ export class MyLightDevice extends Device.UserDevice {
 
     public getDeviceDescriptor() {
         const dd: Device.DeviceDescriptor = {
-            endpointId: '1',
+            endpointId: '1', // should be matched value from getEndpointId()
             name: 'mylightdevice',
             description: 'description',
             manufactureName: 'manu',
