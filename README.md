@@ -1,6 +1,10 @@
 # alexa-smart-home-controller (beta)
 Alexa Smart Home Controller makes your implementation simpler. 
 
+Original Reference (on Amazon)
+https://developer.amazon.com/en-US/docs/alexa/smarthome/understand-the-smart-home-skill-api.html
+
+
 ## Concept
 
 - Readable and easier understandable structure
@@ -356,3 +360,104 @@ export class DummyDevice2 extends Device.UserDevice {
     }
 }
 ```
+
+## Custom Device Mapper
+There are some cases which provides same class instance to the different devices. Imagine it user has more than 2 AirConditioner.
+
+this example,  return lighting device object if required device is light. (supposed to be set the deviceType in the cookie object)
+
+```javascript
+export class MyLightDevice extends Device.UserDevice {
+    public getEndpointId() {
+        return '1'
+    }
+    
+    publich matcher(event: ControllerRequestEvent): boolean {
+      return event.directive.cookie.deviceType === 'lighting'
+    }
+
+    public getCategory() {
+        return ['LIGHT']
+    }
+
+    public getDeviceDescriptor() {
+        const dd: Device.DeviceDescriptor = {
+            endpointId: '1', // should be matched value from getEndpointId()
+            name: 'mylightdevice',
+            description: 'description',
+            manufactureName: 'manu',
+            friendlyName: 'fname',
+            cookie: {hoge: 'hoge'}
+        }
+        return dd
+    }
+```
+
+## Preset Resources
+Alexa-Smart-Home-Controller has several preset capability resources. 
+You will build easier to design your device capability.
+
+**Note: Currently, Only en-US locale has compatibility. (Several resource has ja-JP compatibility.)**
+
+To use preset, Implement it in the UserDevice.getCapability method.
+
+example
+```javascript
+    public getCapability() {
+        return [
+            Discovery.BrightnessControllerPreset,
+            Discovery.PowerControllerPreset,
+            Discovery.FanOnLightToggleControllerPreset
+        ]
+    }
+```
+
+To check all presets, see preset.ts file
+https://github.com/secual/alexa-smart-home-controller/blob/master/src/discovery/preset.ts
+
+
+## Package convention
+Alexa-Smart-Home-Controller calls some of abstract methods from internal.
+
+The rules is below.
+
+```javascript
+  /**
+   * return endpoint id of your device.
+   * This method is called when Alexa Controller Request received.
+   * SmartHomeController check equality this value and Directive.endpoint.endpointId
+    * This is automatically called when Alexa Controller Request Received.
+   */
+  public abstract getEndpointId(): string;
+
+  /**
+   * return you device meta data as DeviceDescriptror
+   * Important: DeviceDescriptor.endpointId is set to the 
+   * directive.endpoint.endpointId in the SmartHomeSkill.
+   * You will access your deviceCloud to make the descriptor at this method.
+   * This is automatically called when Alexa Discovery Request Received when without the discoveryFunction
+   */
+  public abstract getDeviceDescriptor?(): DeviceDescriptor;
+
+  /**
+   * return your device capability
+   * This is automatically called when Alexa Discovery Request Received when without the discoveryFunction
+   */
+  public abstract getCapability?(): Capability[];
+
+  /**
+   * return you device category
+   * This is automatically called when Alexa Discovery Request Received when without the discoveryFunction
+   */
+  public abstract getCategory?(): DeviceCategory[];
+
+  /**
+   * return your device behavior.
+   * You will access your deviceCloud in each behavior.
+   * This is automatically called when Alexa Controller Request Received.
+   */
+  public abstract getDeviceBehavior(): Device.DeviceBehaviorDefinition
+}
+```
+
+
