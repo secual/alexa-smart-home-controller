@@ -28,7 +28,7 @@ export interface IUserDevice {
   getEndpointId(): string;
 
   /**
-   * custom device mapper 
+   * custom device mapper
    */
   matcher?(event: ControllerRequestEvent): boolean;
 
@@ -89,8 +89,8 @@ export abstract class UserDevice implements IUserDevice {
    */
   // @ts-ignore
   public matcher(event: ControllerRequestEvent): boolean {
-    console.log('[ASHC]: matcher on base class')
-    return true
+    console.log('[ASHC]: matcher on base class');
+    return true;
   }
 
   /**
