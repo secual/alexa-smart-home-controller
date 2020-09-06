@@ -28,6 +28,11 @@ export interface IUserDevice {
   getEndpointId(): string;
 
   /**
+   * custom device mapper 
+   */
+  matcher?(event: ControllerRequestEvent): boolean;
+
+  /**
    * This method is automatically called by SmartHomeController
    * You don't need
    */
@@ -77,6 +82,16 @@ export abstract class UserDevice implements IUserDevice {
    * endpoint Id
    */
   public abstract getEndpointId(): string;
+
+  /**
+   * custom matcher by request event
+   * @param event ControllerRequestEvent
+   */
+  // @ts-ignore
+  public matcher(event: ControllerRequestEvent): boolean {
+    console.log('[ASHC]: matcher on base class')
+    return true
+  }
 
   /**
    * endpoint Id

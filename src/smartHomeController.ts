@@ -93,8 +93,16 @@ class SmartHomeController {
       if (this.devicePool) {
         console.log('[ASHC]: Search from devicePool');
         device = this.devicePool.find(
-          (d): boolean =>
-            d.getEndpointId() === this.event.directive.endpoint.endpointId
+          (d): boolean => {
+            let result = d.getEndpointId() === this.event.directive.endpoint.endpointId
+            if (result) {
+              console.log(`[ASHC]: device matched as endpointId`)
+              return result
+            }
+            result = (d.matcher) ? d.matcher(this.event) : result
+            if (result) console.log(`[ASHC]: device matched as matcher function`)
+            return result
+          }
         );
       }
 

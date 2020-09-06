@@ -1,7 +1,7 @@
 
 import SmartHomeController from '../../src'
 import { TestCaseMetaData, MockReturn, TestCaseExpectedFunction } from 'jest-simple-template'
-import { DummyDevice2 } from './dummyDevice'
+import { DummyDevice2, DummyDevice3 } from './dummyDevice'
 
 import mocks from './mocks'
 import expected from './expected'
@@ -145,6 +145,33 @@ describe.each(testCase)('SmartHomeController: Devices and Discovery functions', 
             devices: [
                 // @ts-ignore
                 new DummyDevice2({event: r})
+            ],
+            discoveryFunction: dummySearchFunction
+        })
+        const result = await shc.run()
+        const expected = e as TestCaseExpectedFunction
+        // @ts-ignore
+        expected(result, spies)
+    })
+})
+
+// @ts-ignore
+describe.each(testCase)('SmartHomeController: Devices and Discovery functions', (d, r, e) => {
+    beforeEach(() => {
+        jest.restoreAllMocks()
+    })
+    const testMeta = d as TestCaseMetaData
+    it(`${testMeta.name}:${testMeta.description}`, async () => {
+        let spies
+        if (mocks.hasOwnProperty(testMeta.name)) {
+            spies = mocks[testMeta.name]()
+        }
+
+        const shc = new SmartHomeController({
+            event: r,
+            devices: [
+                // @ts-ignore
+                new DummyDevice3({event: r})
             ],
             discoveryFunction: dummySearchFunction
         })
