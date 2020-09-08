@@ -79,17 +79,22 @@ export abstract class UserDevice implements IUserDevice {
   }
 
   /**
-   * endpoint Id
+   * return endpoint id of your device.
+   * This method is called when Alexa Controller Request received.
+   * SmartHomeController check equality this value and Directive.endpoint.endpointId
+   * This is automatically called when Alexa Controller Request Received.
    */
   public abstract getEndpointId(): string;
 
   /**
-   * custom matcher by request event
-   * @param event ControllerRequestEvent
+   * return you device meta data as DeviceDescriptror
+   * Important: DeviceDescriptor.endpointId is set to the
+   * directive.endpoint.endpointId in the SmartHomeSkill.
+   * You will access your deviceCloud to make the descriptor at this method.
+   * This is automatically called when Alexa Discovery Request Received when without the discoveryFunction
    */
-  // @ts-ignore
   public matcher(event: ControllerRequestEvent): boolean {
-    console.log('[ASHC]: matcher on base class');
+    console.log('[ASHC]: matcher on base class', event);
     return true;
   }
 
@@ -101,24 +106,28 @@ export abstract class UserDevice implements IUserDevice {
   public abstract getDeviceDescriptor?(): DeviceDescriptor;
 
   /**
-   * endpoint
+   * return your device capability
+   * This is automatically called when Alexa Discovery Request Received when without the discoveryFunction
    */
   public abstract getCapability?(): Capability[];
 
   /**
-   * Device Category
+   * return you device category
+   * This is automatically called when Alexa Discovery Request Received when without the discoveryFunction
    */
   public abstract getCategory?(): DeviceCategory[];
 
   /**
-   * Device Behavior
+   * return your device behavior.
+   * You will access your deviceCloud in each behavior.
+   * This is automatically called when Alexa Controller Request Received.
    */
   public abstract getDeviceBehavior(): Device.DeviceBehaviorDefinition;
 
   /**
    * Sending Signal
+   * This method is automatically called from Controller
    */
-  // public abstract sendSignal(): Promise<Device.Response>;
   public async sendSignal(): Promise<Device.Response> {
     const behavior = this.getDeviceBehavior();
     const { namespace, name } = this.config.event.directive.header;

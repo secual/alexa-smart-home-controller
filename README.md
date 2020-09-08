@@ -178,32 +178,50 @@ the alexa-smart-home-controller requires implementation of some methods which de
 
 ```javascript
   /**
-   * endpoint Id
-   */
+   * return endpoint id of your device.
+   * This method is called when Alexa Controller Request received.
+   * SmartHomeController check equality this value and Directive.endpoint.endpointId
+    * This is automatically called when Alexa Controller Request Received.
+  */
   public abstract getEndpointId(): string;
 
   /**
-   * endpoint Id
+   * return you device meta data as DeviceDescriptror
    * Important: DeviceDescriptor.endpointId is set to the 
+   * directive.endpoint.endpointId in the SmartHomeSkill.
+   * You will access your deviceCloud to make the descriptor at this method.
+   * This is automatically called when Alexa Discovery Request Received when without the discoveryFunction
+  */
+  public matcher(event: ControllerRequestEvent): boolean {
+    console.log('[ASHC]: matcher on base class', event);
+    return true;
+  }
+
+  /**
+   * endpoint Id
+   * Important: DeviceDescriptor.endpointId is set to the
    * directive.endpoint.endpointId in the SmartHomeSkill.
    */
   public abstract getDeviceDescriptor?(): DeviceDescriptor;
 
   /**
-   * endpoint
-   */
+   * return your device capability
+   * This is automatically called when Alexa Discovery Request Received when without the discoveryFunction
+  */
   public abstract getCapability?(): Capability[];
 
   /**
-   * Device Category
-   */
+   * return you device category
+   * This is automatically called when Alexa Discovery Request Received when without the discoveryFunction
+  */
   public abstract getCategory?(): DeviceCategory[];
 
   /**
-   * Device Behavior
-   */
-  public abstract getDeviceBehavior(): Device.DeviceBehaviorDefinition
-}
+   * return your device behavior.
+   * You will access your deviceCloud in each behavior.
+   * This is automatically called when Alexa Controller Request Received.
+  */
+  public abstract getDeviceBehavior(): Device.DeviceBehaviorDefinition;
 ```
 
 ### Step2: Implement lambda handler by using SmartHomeController
