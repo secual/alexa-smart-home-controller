@@ -3,7 +3,7 @@ name: Simple CI build and test
 on:
   push:
     branches: 
-      - '*/*'
+      - '**/*'
 
 jobs:
   buildAndTest:
