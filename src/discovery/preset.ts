@@ -196,6 +196,20 @@ export const CurtainToggleControllerPreset = createCapability({
           locale: 'ja-JP',
         },
       },
+      {
+        '@type': 'text',
+        value: {
+          text: 'curtain',
+          locale: 'en-US',
+        },
+      },
+      {
+        '@type': 'text',
+        value: {
+          text: 'electric curtain',
+          locale: 'en-US',
+        },
+      },
     ],
   },
   semantics: {
